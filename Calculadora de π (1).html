@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora de π</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#e9ecfa;--ink:#13203d;--mute:#58658a;--acc:#2f4bff;--pg:rgba(47,75,255,.1);--warn:#b45309;--ok:#0f7b4f;--o1:#b4c3ff;--o2:#ffc1e3;--o3:#aeeaff;--pan:rgba(255,255,255,.42);--rim:rgba(255,255,255,.85);--hi:rgba(255,255,255,.9);--sh:rgba(19,32,61,.14);--gl:rgba(255,255,255,.04);--fld:rgba(255,255,255,.38);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--ink:#e8ebf8;--mute:#a0abcb;--acc:#93a5ff;--pg:rgba(147,165,255,.14);--warn:#f5b04a;--ok:#4cd6a0;--o1:#2a3a9a;--o2:#6b2b78;--o3:#0f5d75;--pan:rgba(26,36,66,.45);--rim:rgba(255,255,255,.26);--hi:rgba(255,255,255,.32);--sh:rgba(0,0,0,.4);--gl:rgba(255,255,255,.03);--fld:rgba(8,12,26,.42)}}
+:root[data-theme="dark"]{--bg:#0b1020;--ink:#e8ebf8;--mute:#a0abcb;--acc:#93a5ff;--pg:rgba(147,165,255,.14);--warn:#f5b04a;--ok:#4cd6a0;--o1:#2a3a9a;--o2:#6b2b78;--o3:#0f5d75;--pan:rgba(26,36,66,.45);--rim:rgba(255,255,255,.26);--hi:rgba(255,255,255,.32);--sh:rgba(0,0,0,.4);--gl:rgba(255,255,255,.03);--fld:rgba(8,12,26,.42)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Bricolage Grotesque",system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(55vmax 45vmax at 8% 4%,var(--o1),transparent 62%),radial-gradient(50vmax 50vmax at 100% 38%,var(--o2),transparent 60%),radial-gradient(60vmax 40vmax at 0% 100%,var(--o3),transparent 62%)}
+main{max-width:640px;margin:0 auto;padding:20px 16px 56px}
+h1{font-size:clamp(2.2rem,9vw,3.4rem);line-height:1;margin:8px 0 6px;font-weight:800;letter-spacing:-.02em}
+h1 span{color:var(--acc)}
+.lead{color:var(--mute);margin:0 0 20px;max-width:46ch}
+.card{background:var(--pan);-webkit-backdrop-filter:blur(26px) saturate(1.7);backdrop-filter:blur(26px) saturate(1.7);border-radius:28px;padding:18px;margin-bottom:14px;box-shadow:inset 0 0 0 1px var(--rim),inset 0 1px 0 var(--hi),0 14px 40px var(--sh)}
+.pop{animation:pop .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.93) translateY(16px)}to{opacity:1;transform:none}}
+h2{font-size:1.05rem;margin:0 0 10px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
+.stats div{border-left:3px solid var(--acc);padding-left:8px}
+.stats b{display:block;font:500 1.05rem "IBM Plex Mono",monospace;overflow-wrap:anywhere}
+.stats small{color:var(--mute);font-size:.78rem}
+.rec{margin:0 0 10px}
+.rec b{font:500 1.2rem "IBM Plex Mono",monospace;color:var(--acc)}
+/* Liquid glass: transparente, con borde de luz y deformación elástica */
+.glass{position:relative;isolation:isolate;font:inherit;color:var(--ink);cursor:pointer;border:0;background:var(--gl);border-radius:999px;padding:10px 18px;min-height:46px;
+-webkit-backdrop-filter:blur(3px) saturate(1.9) brightness(1.06);backdrop-filter:blur(3px) saturate(1.9) brightness(1.06);
+box-shadow:inset 0 0 0 1px var(--rim),inset 3px 4px 8px -4px var(--hi),inset -3px -4px 8px -4px var(--rim),0 8px 22px var(--sh);
+transform:translate3d(var(--tx,0px),var(--ty,0px),0) scale(var(--sx,1),var(--sy,1));will-change:transform;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transition:box-shadow .25s,backdrop-filter .25s}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(circle at var(--px,50%) var(--py,50%),var(--hi),transparent 60%);transition:opacity .25s}
+.glass.down::before{opacity:.75}
+.glass.down{-webkit-backdrop-filter:blur(1px) saturate(2.3) brightness(1.22);backdrop-filter:blur(1px) saturate(2.3) brightness(1.22)}
+.glass:focus-visible,.fld:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+.glass:disabled{opacity:.45;cursor:not-allowed}
+.primary{flex:1;font-weight:600;color:var(--acc);background:var(--pg)}
+.on,.m[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--acc),inset 3px 4px 8px -4px var(--hi),0 8px 22px var(--sh)}
+.m{display:block;width:100%;text-align:left;border-radius:22px;padding:12px 16px;margin-bottom:8px}
+.m b{display:block;font-weight:600}.m small{color:var(--mute);font-size:.84rem;line-height:1.3;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip small{display:block;color:var(--mute);font-size:.74rem}
+label{display:block;font-weight:600;margin-bottom:6px}
+.fld{width:100%;background:var(--fld);border:0;border-radius:18px;color:var(--ink);box-shadow:inset 0 0 0 1px var(--rim),inset 0 2px 6px rgba(0,0,0,.08)}
+input.fld{font:500 1.35rem "IBM Plex Mono",monospace;padding:11px 14px}
+textarea.fld{height:210px;resize:vertical;font:400 .95rem/1.45 "IBM Plex Mono",monospace;padding:12px;overflow-wrap:anywhere}
+.row{display:flex;gap:10px;margin-top:12px}
+.hint{color:var(--mute);font-size:.9rem;margin:8px 0 0;min-height:1.4em}
+.hint.warn,.bad{color:var(--warn)}.ok{color:var(--ok)}
+.bar{height:12px;border-radius:8px;background:var(--fld);overflow:hidden;margin:10px 0 6px;box-shadow:inset 0 0 0 1px var(--rim)}
+.bar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.5),transparent 60%),var(--acc);transition:width .2s}
+.bar.ind i{width:100%!important;background:repeating-linear-gradient(90deg,var(--acc) 0 18px,transparent 18px 36px);animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:36px 0}}
+@media (prefers-reduced-motion:reduce){.bar.ind i,.pop{animation:none}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Calculadora de <span>π</span></h1>
+<p class="lead">Calcula tantos dígitos como quieras con el procesador de tu dispositivo. Elige un método, mide tu rendimiento y te sugiere una cifra razonable.</p>
+
+<section class="card" aria-live="polite">
+  <h2>Tu dispositivo</h2>
+  <div class="stats">
+    <div><b id="cores">–</b><small>hilos de CPU</small></div>
+    <div><b id="mem">–</b><small>memoria aprox.</small></div>
+    <div><b id="lvl">…</b><small>potencia</small></div>
+  </div>
+  <p class="rec" id="rec">Midiendo el rendimiento…</p>
+  <button id="rebench" class="glass" type="button" hidden>Medir de nuevo</button>
+</section>
+
+<section class="card">
+  <h2 id="mh">Método de cálculo</h2>
+  <div id="meths" role="radiogroup" aria-labelledby="mh"></div>
+</section>
+
+<section class="card">
+  <label for="n">Dígitos de π a calcular</label>
+  <input id="n" class="fld" type="text" inputmode="numeric" autocomplete="off" value="100000">
+  <div class="chips" id="chips"></div>
+  <p class="hint" id="hint"></p>
+  <div class="row">
+    <button id="go" class="glass primary" type="button" disabled>Calcular</button>
+    <button id="stop" class="glass" type="button" hidden>Cancelar</button>
+  </div>
+</section>
+
+<section class="card" id="prog" hidden aria-live="polite">
+  <h2 id="phase">Preparando…</h2>
+  <div class="bar" id="bar"><i id="fill"></i></div>
+  <small id="el" style="color:var(--mute)">0,0 s</small>
+</section>
+
+<section class="card" id="res" hidden>
+  <h2>Resultado <small id="meth" style="color:var(--mute);font-weight:400"></small></h2>
+  <div class="stats">
+    <div><b id="rd">–</b><small>dígitos</small></div>
+    <div><b id="rt">–</b><small>tiempo</small></div>
+    <div><b id="rs">–</b><small>dígitos por segundo</small></div>
+  </div>
+  <p id="ver" class="hint"></p>
+  <p id="cmp" class="hint"></p>
+  <textarea id="out" class="fld" readonly spellcheck="false" aria-label="Dígitos de pi"></textarea>
+  <p class="hint" id="trunc"></p>
+  <div class="row"><button id="copy" class="glass" type="button">Copiar dígitos</button></div>
+</section>
+</main>
+
+<script>
+/* Núcleo autocontenido (se ejecuta en un Web Worker). Métodos: chud, ram, gl, mach. */
+function core(D, method, rep){
+  const prec = D + 15, one = 10n ** BigInt(prec);
+  function isqrt(n){
+    if (n < (1n << 60n)){
+      let x = BigInt(Math.floor(Math.sqrt(Number(n))));
+      while (x*x > n) x--;
+      while ((x+1n)*(x+1n) <= n) x++;
+      return x;
+    }
+    const k = BigInt(n.toString(16).length);
+    const s = isqrt(n >> (2n*k));
+    let x = (s + 1n) << k;
+    for(;;){ const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
+  }
+  function bsPi(dpt, leaf){
+    const N = Math.floor(prec / dpt) + 2;
+    let leaves = 0, last = 0;
+    function bs(a, b){
+      if (b - a === 1){
+        const r = leaf(a); leaves++;
+        const now = Date.now();
+        if (now - last > 80){ last = now; rep('series', leaves / N); }
+        return r;
+      }
+      const m = (a + b) >> 1, L = bs(a, m), R = bs(m, b);
+      return [L[0]*R[0], L[1]*R[1], R[1]*L[2] + L[0]*R[2]];
+    }
+    return bs(0, N);
+  }
+  let pi;
+  if (method === 'chud'){
+    const r = bsPi(14.181647462, a => {
+      let P = 1n, Q = 1n;
+      if (a){ const A = BigInt(a); P = (6n*A-5n)*(2n*A-1n)*(6n*A-1n); Q = A*A*A*10939058860032000n; }
+      const T = P * (13591409n + 545140134n * BigInt(a));
+      return [P, Q, (a & 1) ? -T : T];
+    });
+    rep('sqrt', 0); const sq = isqrt(10005n * one * one);
+    rep('div', 0); pi = r[1] * 426880n * sq / r[2];
+  } else if (method === 'ram'){
+    const r = bsPi(7.98, a => {
+      let P = 1n, Q = 1n;
+      if (a){ const A = BigInt(a); P = 8n*(4n*A-1n)*(2n*A-1n)*(4n*A-3n); Q = A*A*A*24591257856n; }
+      return [P, Q, P * (1103n + 26390n * BigInt(a))];
+    });
+    rep('sqrt', 0); const sq = isqrt(2n * one * one);
+    rep('div', 0); pi = 9801n * sq * r[1] / (4n * r[2]);
+  } else if (method === 'gl'){
+    const iters = Math.ceil(Math.log2(prec)) + 2;
+    let a = one, b = isqrt(one * one >> 1n), t = one >> 2n, p = 1n;
+    for (let i = 0; i < iters; i++){
+      rep('series', i / iters);
+      const an = (a + b) >> 1n;
+      b = isqrt(a * b);
+      const d = a - an;
+      t -= p * d * d / one;
+      a = an; p <<= 1n;
+      if (a - b <= 1n && b - a <= 1n) break;
+    }
+    rep('div', 0); pi = (a + b) * (a + b) / (4n * t);
+  } else {
+    const tot = prec * (1 / 1.3979 + 1 / 4.7544);
+    let steps = 0;
+    const atanInv = x => {
+      const x2 = x * x;
+      let term = one / x, sum = term, k = 1n, neg = true;
+      while (term > 0n){
+        term /= x2; k += 2n;
+        sum += neg ? -(term / k) : term / k;
+        neg = !neg;
+        if ((++steps & 63) === 0) rep('series', Math.min(1, steps / tot));
+      }
+      return sum;
+    };
+    pi = 16n * atanInv(5n) - 4n * atanInv(239n);
+  }
+  rep('str', 0);
+  const s = pi.toString();
+  return s[0] + '.' + s.slice(1, D + 1);
+}
+
+const $ = id => document.getElementById(id);
+const MET = {
+  chud: {name: 'Chudnovsky', desc: 'Serie con división binaria, ~14 dígitos por término. Es el método de los récords mundiales.', b: [20000, 80000, 250000], prior: 1.55, mem: 1},
+  ram:  {name: 'Ramanujan', desc: 'Serie de 1914 con ~8 dígitos por término. Más sencilla y algo más lenta.', b: [20000, 80000, 250000], prior: 1.55, mem: 1},
+  gl:   {name: 'Gauss–Legendre', desc: 'Media aritmético-geométrica: cada paso duplica los dígitos correctos. Gasta mucha memoria.', b: [5000, 20000], prior: 1.9, mem: .5},
+  mach: {name: 'Machin', desc: 'π = 16·arctan(1/5) − 4·arctan(1/239). Clásico y ligero en memoria, pero lento con muchas cifras.', b: [5000, 20000], prior: 2, mem: 2}
+};
+const PI50 = '3.14159265358979323846264338327950288419716939937510';
+let meth = 'chud', bench = {}, runs = {}, devLevel = '…', busy = false, current = null, workerOK = true, blobUrl = null, timer = null, fullText = '';
+try { runs = JSON.parse(localStorage.getItem('piRuns') || '{}'); } catch (e) { runs = {}; }
+const saveRuns = () => { try { localStorage.setItem('piRuns', JSON.stringify(runs)); } catch (e) {} };
+const memGB = navigator.deviceMemory || 4;
+const memCap = () => memGB * 1e7 * MET[meth].mem;
+const fmtN = n => Number(n).toLocaleString('es-ES');
+function fmtT(s){
+  if (s < 1) return Math.round(s * 1000) + ' ms';
+  if (s < 60) return s.toLocaleString('es-ES', {maximumFractionDigits: 1}) + ' s';
+  if (s < 3600) return Math.floor(s / 60) + ' min ' + Math.round(s % 60) + ' s';
+  return (s / 3600).toLocaleString('es-ES', {maximumFractionDigits: 1}) + ' h';
+}
+function nice(n){ const p = Math.pow(10, Math.floor(Math.log10(n)) - 1); return Math.max(1000, Math.round(n / p) * p); }
+
+/* Estimación: interpolación log-log entre medidas reales (prueba + cálculos anteriores en este dispositivo) */
+function pts(m){
+  const mp = new Map();
+  (bench[m] || []).concat(runs[m] || []).forEach(p => mp.set(p[0], p));
+  return [...mp.values()].sort((a, b) => a[0] - b[0]);
+}
+function est(n, m = meth){
+  const P = pts(m); if (!P.length) return NaN;
+  const pr = MET[m].prior;
+  const sl = i => Math.min(2.4, Math.max(1.1, Math.log(P[i+1][1] / P[i][1]) / Math.log(P[i+1][0] / P[i][0])));
+  if (P.length === 1) return P[0][1] * Math.pow(n / P[0][0], pr);
+  const L = P.length - 1;
+  if (n <= P[0][0]) return P[0][1] * Math.pow(n / P[0][0], sl(0));
+  if (n >= P[L][0]) return P[L][1] * Math.pow(n / P[L][0], Math.max(pr, sl(L - 1)));
+  let i = 0; while (P[i+1][0] < n) i++;
+  return P[i][1] * Math.pow(n / P[i][0], sl(i));
+}
+function digitsFor(sec){
+  let lo = 1e3, hi = 1e10;
+  for (let i = 0; i < 60; i++){ const mid = Math.sqrt(lo * hi); if (est(mid) > sec) hi = mid; else lo = mid; }
+  return nice(lo);
+}
+
+function job(m, digits, onp){
+  return new Promise((resolve, reject) => {
+    const mainThread = () => {
+      workerOK = false; current = null;
+      setTimeout(() => {
+        try { const t = performance.now(); const s = core(digits, m, () => {}); resolve({s, ms: performance.now() - t}); }
+        catch (e) { reject(e); }
+      }, 40);
+    };
+    if (!workerOK) return mainThread();
+    let w, got = false;
+    try {
+      if (!blobUrl){
+        const src = 'const core=' + core.toString() + ';onmessage=e=>{try{const t=performance.now();const s=core(e.data.d,e.data.m,(ph,f)=>postMessage({ph,f}));postMessage({done:1,s,ms:performance.now()-t})}catch(err){postMessage({err:String(err&&err.message||err)})}}';
+        blobUrl = URL.createObjectURL(new Blob([src], {type: 'application/javascript'}));
+      }
+      w = new Worker(blobUrl);
+    } catch (e) { return mainThread(); }
+    current = {w, reject};
+    w.onmessage = e => {
+      got = true; const d = e.data;
+      if (d.done){ w.terminate(); current = null; resolve(d); }
+      else if (d.err){ w.terminate(); current = null; reject(new Error(d.err)); }
+      else if (onp) onp(d.ph, d.f);
+    };
+    w.onerror = () => { w.terminate(); if (!got) mainThread(); else { current = null; reject(new Error('Error en el cálculo')); } };
+    w.postMessage({d: digits, m});
+  });
+}
+
+function setBusy(b){
+  busy = b;
+  $('go').disabled = b; $('rebench').hidden = b;
+  document.querySelectorAll('.m').forEach(x => x.disabled = b);
+}
+
+async function runBench(m){
+  setBusy(true);
+  $('rec').textContent = 'Midiendo ' + MET[m].name + ' en tu dispositivo…';
+  try {
+    await job(m, 1500);
+    const res = [];
+    for (const n of MET[m].b){ const r = await job(m, n); res.push([n, Math.max(r.ms / 1000, .002)]); }
+    bench[m] = res;
+    if (m === 'chud'){
+      const t = res[0][1] * (30000 / res[0][0]);
+      devLevel = t < .25 ? 'Muy alta' : t < .6 ? 'Alta' : t < 1.5 ? 'Media' : t < 4 ? 'Básica' : 'Limitada';
+    }
+  } catch (e) { bench[m] = [[MET[m].b[0], .1], [MET[m].b[1], .8]]; }
+  setBusy(false);
+  refresh();
+}
+
+function refresh(){
+  $('cores').textContent = navigator.hardwareConcurrency || '?';
+  $('mem').textContent = (navigator.deviceMemory ? '≥ ' : '~ ') + memGB + ' GB';
+  $('lvl').textContent = devLevel;
+  const rec = Math.min(digitsFor(10), memCap());
+  $('rec').innerHTML = 'Con ' + MET[meth].name + ' te recomiendo <b>' + fmtN(rec) + '</b> dígitos (unos ' + fmtT(est(rec)) + '). Puedes elegir cualquier cifra.';
+  $('chips').innerHTML = '';
+  [['Ligero', 2], ['Recomendado', 10], ['Intenso', 60], ['Extremo', 600]].forEach(([name, sec]) => {
+    const n = Math.min(digitsFor(sec), memCap());
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'glass chip'; b.dataset.n = n;
+    b.innerHTML = name + '<small>' + fmtN(n) + '</small>';
+    b.onclick = () => { $('n').value = n; upd(); };
+    glass(b); $('chips').appendChild(b);
+  });
+  $('n').value = rec; upd();
+}
+
+function buildMethods(){
+  const box = $('meths'); box.innerHTML = '';
+  Object.keys(MET).forEach(k => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'glass m'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', k === meth);
+    b.innerHTML = '<b>' + MET[k].name + '</b><small>' + MET[k].desc + '</small>';
+    b.onclick = () => {
+      if (busy || k === meth) return;
+      meth = k;
+      box.querySelectorAll('.m').forEach(x => x.setAttribute('aria-checked', x === b));
+      if (bench[k]) refresh(); else runBench(k);
+    };
+    glass(b); box.appendChild(b);
+  });
+}
+
+function parse(){ const v = $('n').value.replace(/\D/g, ''); return v ? Number(v) : 0; }
+function upd(){
+  const n = parse(), h = $('hint');
+  h.className = 'hint';
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', Number(c.dataset.n) === n));
+  if (!n || !bench[meth]){ h.textContent = ''; return; }
+  const t = est(n);
+  let msg = 'Tiempo estimado: ' + fmtT(t) + ' (aproximado; mejora con cada cálculo).';
+  if (n > 3e8){ msg = 'Supera el límite técnico de BigInt (~300 millones de dígitos): el cálculo fallará.'; h.className = 'hint warn'; }
+  else if (n > memCap()){ msg += ' Puede quedarse sin memoria en este dispositivo.'; h.className = 'hint warn'; }
+  else if (t > 600){ msg += ' Es mucho tiempo; puedes cancelar cuando quieras.'; h.className = 'hint warn'; }
+  h.textContent = msg;
+}
+$('n').addEventListener('input', upd);
+
+function setProg(ph, f){
+  const ser = {chud: 'Sumando la serie de Chudnovsky', ram: 'Sumando la serie de Ramanujan', gl: 'Iterando la media aritmético-geométrica', mach: 'Sumando los arcotangentes'}[meth];
+  const names = {series: ser, sqrt: 'Calculando la raíz cuadrada', div: 'División final', str: 'Convirtiendo a texto'};
+  const base = {series: 0, sqrt: .76, div: .88, str: .95}[ph];
+  const v = ph === 'series' ? f * .75 : base;
+  $('phase').textContent = names[ph] || 'Calculando';
+  $('fill').style.width = (v * 100).toFixed(1) + '%';
+  $('bar').classList.toggle('ind', ph !== 'series');
+}
+
+async function run(){
+  const n = parse();
+  if (!n){ $('hint').textContent = 'Escribe cuántos dígitos quieres.'; return; }
+  const e0 = est(n);
+  setBusy(true); $('res').hidden = true;
+  $('prog').hidden = false; $('stop').hidden = !workerOK;
+  setProg('series', 0);
+  const t0 = performance.now();
+  timer = setInterval(() => { $('el').textContent = fmtT((performance.now() - t0) / 1000); }, 100);
+  if (!workerOK) $('phase').textContent = 'Calculando (la página puede congelarse un momento)…';
+  try {
+    const r = await job(meth, n, setProg);
+    if (n >= MET[meth].b[1]){ runs[meth] = (runs[meth] || []).concat([[n, r.ms / 1000]]).slice(-10); saveRuns(); }
+    show(n, r, e0);
+  } catch (e) {
+    $('hint').className = 'hint warn';
+    $('hint').textContent = e.message === 'cancel' ? 'Cálculo cancelado.' : 'No se pudo completar: ' + (/Invalid|Maximum|memory|range/i.test(e.message) ? 'este dispositivo no tiene memoria suficiente para tantos dígitos.' : e.message);
+  }
+  clearInterval(timer); $('prog').hidden = true; $('stop').hidden = true;
+  setBusy(false);
+}
+
+function show(n, r, e0){
+  fullText = r.s;
+  const sec = r.ms / 1000, PREV = 300000;
+  $('meth').textContent = '· ' + MET[meth].name;
+  $('rd').textContent = fmtN(n); $('rt').textContent = fmtT(sec);
+  $('rs').textContent = fmtN(Math.round(n / sec));
+  const k = Math.min(PI50.length, r.s.length);
+  const good = r.s.slice(0, k) === PI50.slice(0, k);
+  $('ver').className = 'hint ' + (good ? 'ok' : 'bad');
+  $('ver').textContent = good ? '✓ Los primeros ' + Math.min(50, n) + ' decimales coinciden con el valor conocido de π.' : '✗ Los primeros decimales no coinciden: hubo un error.';
+  $('cmp').textContent = 'Estimado antes de calcular: ' + fmtT(e0) + ' · real: ' + fmtT(sec) + '. Las próximas estimaciones usarán este dato.';
+  $('out').value = r.s.length > PREV ? r.s.slice(0, PREV) : r.s;
+  $('trunc').textContent = r.s.length > PREV ? 'Se muestran los primeros ' + fmtN(PREV) + ' dígitos; “Copiar dígitos” copia todos.' : '';
+  $('res').hidden = false; $('res').classList.remove('pop'); void $('res').offsetWidth; $('res').classList.add('pop');
+  $('res').scrollIntoView({behavior: 'smooth', block: 'start'});
+  upd();
+}
+
+/* Física de resorte tipo iOS: al pulsar se hincha; al arrastrar se estira con resistencia elástica; al soltar rebota. */
+const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+function glass(el){
+  if (reduce) return;
+  const K = 320, C = 19, keys = ['x', 'y', 'sx', 'sy'];
+  const s = {x: 0, y: 0, sx: 1, sy: 1, vx: 0, vy: 0, vsx: 0, vsy: 0}, t = {x: 0, y: 0, sx: 1, sy: 1};
+  let raf = 0, last = 0, down = false, r = null, inside = true;
+  const draw = () => {
+    el.style.setProperty('--tx', s.x.toFixed(2) + 'px'); el.style.setProperty('--ty', s.y.toFixed(2) + 'px');
+    el.style.setProperty('--sx', s.sx.toFixed(4)); el.style.setProperty('--sy', s.sy.toFixed(4));
+  };
+  const step = now => {
+    const dt = Math.min(.032, (now - last) / 1000 || .016); last = now;
+    let moving = false;
+    keys.forEach(k => {
+      const v = 'v' + k;
+      s[v] += (-K * (s[k] - t[k]) - C * s[v]) * dt;
+      s[k] += s[v] * dt;
+      if (Math.abs(s[v]) > .01 || Math.abs(s[k] - t[k]) > .001) moving = true;
+    });
+    if (moving) raf = requestAnimationFrame(step);
+    else { keys.forEach(k => { s[k] = t[k]; s['v' + k] = 0; }); raf = 0; }
+    draw();
+  };
+  const kick = () => { if (!raf){ last = performance.now(); raf = requestAnimationFrame(step); } };
+  const aim = e => {
+    const w = r.width, h = r.height, dx = e.clientX - (r.left + w / 2), dy = e.clientY - (r.top + h / 2);
+    const ex = Math.sign(dx) * Math.max(0, Math.abs(dx) - w / 2), ey = Math.sign(dy) * Math.max(0, Math.abs(dy) - h / 2);
+    const Lx = Math.min(36, w * .4), Ly = Math.min(30, h * .5);
+    const ox = Math.sign(ex) * Lx * (1 - Math.exp(-Math.abs(ex) / (Lx * 2.2)));
+    const oy = Math.sign(ey) * Ly * (1 - Math.exp(-Math.abs(ey) / (Ly * 2.2)));
+    inside = Math.abs(dx) <= w / 2 + 16 && Math.abs(dy) <= h / 2 + 16;
+    t.sx = Math.min(1.9, Math.min(1.12, 1 + 10 / w) + Math.abs(ox) / w * .9 - Math.abs(oy) / h * .12);
+    t.sy = Math.min(1.5, Math.min(1.12, 1 + 6 / h) + Math.abs(oy) / h * .55 - Math.abs(ox) / w * .12);
+    t.x = ox * .55 + Math.max(-w / 2, Math.min(w / 2, dx)) * .06;
+    t.y = oy * .55 + Math.max(-h / 2, Math.min(h / 2, dy)) * .06;
+    el.style.setProperty('--px', (e.clientX - r.left) + 'px'); el.style.setProperty('--py', (e.clientY - r.top) + 'px');
+    kick();
+  };
+  const release = cancel => {
+    if (!down) return;
+    down = false; el.classList.remove('down');
+    if (cancel || !inside){ el._cancel = true; setTimeout(() => { el._cancel = false; }, 80); }
+    t.x = 0; t.y = 0; t.sx = 1; t.sy = 1; kick();
+  };
+  el.addEventListener('pointerdown', e => {
+    if (el.disabled || e.button > 0) return;
+    r = el.getBoundingClientRect(); down = true; el._cancel = false;
+    try { el.setPointerCapture(e.pointerId); } catch (x) {}
+    el.classList.add('down'); aim(e);
+  });
+  el.addEventListener('pointermove', e => { if (down) aim(e); });
+  el.addEventListener('pointerup', () => release(false));
+  el.addEventListener('pointercancel', () => release(true));
+}
+/* Soltar fuera del botón cancela el toque, como en iOS */
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.glass');
+  if (b && b._cancel){ b._cancel = false; e.stopImmediatePropagation(); e.preventDefault(); }
+}, true);
+
+document.querySelectorAll('.glass').forEach(glass);
+$('go').onclick = run;
+$('stop').onclick = () => { if (current){ current.w.terminate(); current.reject(new Error('cancel')); current = null; } };
+$('rebench').onclick = () => { delete bench[meth]; runs[meth] = []; saveRuns(); runBench(meth); };
+$('copy').onclick = async () => {
+  const b = $('copy');
+  try { await navigator.clipboard.writeText(fullText); b.textContent = 'Copiado'; }
+  catch (e) { $('out').select(); try { document.execCommand('copy'); b.textContent = 'Copiado (vista previa)'; } catch (e2) { b.textContent = 'Selecciona y copia a mano'; } }
+  setTimeout(() => { b.textContent = 'Copiar dígitos'; }, 1800);
+};
+buildMethods();
+runBench('chud');
+</script>
+</body>
+</html>
